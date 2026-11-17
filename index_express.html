@@ -1,0 +1,2432 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Constancias · Express</title>
+
+    <style>
+        /* =====================================================
+           INTERFAZ TIPO "CINTA" (RIBBON) COMO MICROSOFT WORD
+           ===================================================== */
+        :root {
+            --titulo: #1d1b33;          /* barra de título */
+            --titulo-2: #2a2747;
+            --oro: #b8913f;             /* acento (identidad del programa) */
+            --oro-claro: #f4ead6;
+            --oro-medio: #e7d3a8;
+            --cinta: #f7f7f8;           /* fondo de la cinta */
+            --borde: #d8d8dd;
+            --borde-2: #c4c4cc;
+            --texto: #252423;
+            --texto-2: #605e5c;
+            --hover: #e8e8ec;
+            --activo: #dcdce3;
+            --zona: #e4e4ea;            /* fondo alrededor de la hoja */
+            --panel: #ffffff;
+            --peligro: #c4314b;
+            --ok: #2e7d4f;
+            --aviso: #b26a00;
+            --radio: 4px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, Tahoma, sans-serif;
+            font-size: 13px;
+            color: var(--texto);
+            background: var(--zona);
+            overflow: hidden;
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
+            color: inherit;
+        }
+
+        .ico {
+            width: 16px;
+            height: 16px;
+            flex: 0 0 auto;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .ico.lg {
+            width: 30px;
+            height: 30px;
+            stroke-width: 1.6;
+        }
+
+        .ico.oro {
+            color: var(--oro);
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c8;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+
+        .app {
+            display: grid;
+            grid-template-rows: auto auto auto 1fr auto;
+            height: 100vh;
+        }
+
+        /* ---------------- Barra de título ---------------- */
+        .titlebar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: linear-gradient(90deg, var(--titulo), var(--titulo-2));
+            color: #fff;
+            height: 38px;
+            padding: 0 0.75rem;
+        }
+
+        .titlebar .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
+        .titlebar .logo .ico {
+            color: var(--oro-medio);
+        }
+
+        .quick {
+            display: flex;
+            gap: 2px;
+            padding-left: 0.6rem;
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .quick button,
+        .quick label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: var(--radio);
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .quick button:hover,
+        .quick label:hover {
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .titlebar .doc {
+            flex: 1;
+            text-align: center;
+            opacity: 0.85;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .titlebar .ver {
+            font-size: 11px;
+            opacity: 0.65;
+        }
+
+        /* ---------------- Pestañas ---------------- */
+        .tabs {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            background: var(--cinta);
+            padding: 4px 0.75rem 0;
+            border-bottom: 1px solid var(--borde);
+        }
+
+        .tab {
+            border: none;
+            background: transparent;
+            padding: 6px 14px 7px;
+            cursor: pointer;
+            color: var(--texto-2);
+            border-radius: var(--radio) var(--radio) 0 0;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tab:hover {
+            background: var(--hover);
+            color: var(--texto);
+        }
+
+        .tab.active {
+            color: var(--texto);
+            font-weight: 600;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            left: 12px;
+            right: 12px;
+            bottom: 0;
+            height: 3px;
+            border-radius: 3px;
+            background: var(--oro);
+        }
+
+        .tab.contextual {
+            color: var(--oro);
+        }
+
+        .tabs .spacer {
+            flex: 1;
+        }
+
+        .tabs .hint-tab {
+            font-size: 11px;
+            color: var(--texto-2);
+            padding-bottom: 7px;
+        }
+
+        /* ---------------- Cinta ---------------- */
+        .ribbon {
+            background: var(--cinta);
+            border-bottom: 1px solid var(--borde);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            min-height: 104px;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        .ribbon-panel {
+            display: none;
+            align-items: stretch;
+            height: 104px;
+            padding: 4px 6px 0;
+        }
+
+        .ribbon-panel.active {
+            display: flex;
+        }
+
+        .group {
+            display: flex;
+            flex-direction: column;
+            padding: 0 8px;
+            border-right: 1px solid var(--borde);
+            flex: 0 0 auto;
+        }
+
+        .group:last-child {
+            border-right: none;
+        }
+
+        .group-body {
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            gap: 4px;
+            padding-top: 2px;
+        }
+
+        .group-label {
+            text-align: center;
+            font-size: 11px;
+            color: var(--texto-2);
+            padding: 3px 0 4px;
+            white-space: nowrap;
+        }
+
+        /* Botón grande (icono arriba, texto abajo) */
+        .big {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 4px;
+            min-width: 60px;
+            max-width: 84px;
+            height: 74px;
+            padding: 6px 6px 4px;
+            border: 1px solid transparent;
+            border-radius: var(--radio);
+            background: transparent;
+            cursor: pointer;
+            text-align: center;
+            line-height: 1.15;
+            font-size: 12px;
+            position: relative;
+        }
+
+        .big:hover:not(:disabled) {
+            background: var(--hover);
+            border-color: var(--borde);
+        }
+
+        .big:active:not(:disabled) {
+            background: var(--activo);
+        }
+
+        .big.active {
+            background: var(--oro-claro);
+            border-color: var(--oro-medio);
+        }
+
+        .big:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .big.primary .ico {
+            color: var(--oro);
+        }
+
+        .big input[type="file"],
+        .small input[type="file"],
+        .quick input[type="file"] {
+            display: none;
+        }
+
+        /* Columna de botones pequeños apilados */
+        .stack3 {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            justify-content: flex-start;
+        }
+
+        .small:not(.modal) {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: 24px;
+            padding: 0 8px 0 5px;
+            border: 1px solid transparent;
+            border-radius: var(--radio);
+            background: transparent;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+
+        .small:not(.modal):hover:not(:disabled) {
+            background: var(--hover);
+            border-color: var(--borde);
+        }
+
+        .small:not(.modal):disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .small:not(.modal).danger .ico {
+            color: var(--peligro);
+        }
+
+        /* Fila de controles compactos (como el grupo Fuente de Word) */
+        .ctl-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .ctl-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .r-input,
+        .r-select {
+            height: 24px;
+            border: 1px solid var(--borde-2);
+            border-radius: 3px;
+            background: #fff;
+            padding: 0 6px;
+            outline: none;
+            font-size: 12px;
+        }
+
+        .r-input:focus,
+        .r-select:focus {
+            border-color: var(--oro);
+            box-shadow: 0 0 0 1px var(--oro);
+        }
+
+        .r-input.num {
+            width: 56px;
+            text-align: center;
+        }
+
+        .ctl-label {
+            font-size: 11px;
+            color: var(--texto-2);
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        /* Botones de icono en grupo (N K S, alineación) */
+        .segmented {
+            display: inline-flex;
+            border: 1px solid var(--borde-2);
+            border-radius: 3px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .segmented button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            min-width: 26px;
+            height: 22px;
+            padding: 0 5px;
+            border: none;
+            border-right: 1px solid var(--borde);
+            background: transparent;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .segmented button:last-child {
+            border-right: none;
+        }
+
+        .segmented button:hover {
+            background: var(--hover);
+        }
+
+        .segmented button.active {
+            background: var(--oro-claro);
+            box-shadow: inset 0 -2px 0 var(--oro);
+        }
+
+        .icon-only {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .icon-only:hover {
+            background: var(--hover);
+            border-color: var(--borde);
+        }
+
+        .color-btn {
+            position: relative;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 24px;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .color-btn:hover {
+            background: var(--hover);
+            border-color: var(--borde);
+        }
+
+        .color-btn input[type="color"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .color-btn .swatch {
+            width: 18px;
+            height: 4px;
+            margin-top: 1px;
+            border-radius: 1px;
+            background: #000;
+        }
+
+        .r-range {
+            width: 90px;
+            accent-color: var(--oro);
+        }
+
+        .tiny {
+            font-size: 11px;
+            color: var(--texto-2);
+            min-width: 34px;
+        }
+
+        .ribbon .hint {
+            font-size: 11px;
+            color: var(--texto-2);
+            max-width: 210px;
+            line-height: 1.3;
+        }
+
+        /* ---------------- Cuerpo: panel + hoja ---------------- */
+        .body {
+            display: grid;
+            grid-template-columns: 270px 1fr;
+            min-height: 0;
+        }
+
+        .pane {
+            background: var(--panel);
+            border-right: 1px solid var(--borde);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .pane-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px 6px;
+            font-weight: 600;
+        }
+
+        .pane-scroll {
+            overflow-y: auto;
+            padding: 0 12px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 0;
+        }
+
+        .pane-section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--texto-2);
+            font-weight: 600;
+            padding-top: 6px;
+            border-top: 1px solid var(--borde);
+            display: flex;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .pane-section-title small {
+            text-transform: none;
+            letter-spacing: 0;
+            color: var(--oro);
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .fields-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            border-radius: var(--radio);
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .field-row:hover {
+            background: var(--hover);
+        }
+
+        .field-row.selected {
+            background: var(--oro-claro);
+            border-left-color: var(--oro);
+        }
+
+        .field-row-label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .field-row.disabled .field-row-label {
+            color: #a19f9d;
+        }
+
+        .field-row-type {
+            font-size: 10.5px;
+            color: var(--texto-2);
+        }
+
+        input[type="checkbox"] {
+            accent-color: var(--oro);
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+        }
+
+        /* Clases que usa renderer.js dentro del panel */
+        .stack {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .row>* {
+            flex: 1;
+        }
+
+        .label {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .hint {
+            font-size: 11.5px;
+            color: var(--texto-2);
+            line-height: 1.35;
+        }
+
+        .input {
+            width: 100%;
+            height: 28px;
+            border: 1px solid var(--borde-2);
+            border-radius: 3px;
+            background: #fff;
+            padding: 0 8px;
+            outline: none;
+        }
+
+        textarea.input {
+            height: auto;
+            padding: 6px 8px;
+            resize: vertical;
+            line-height: 1.45;
+            min-height: 100px;
+        }
+
+        .input:focus {
+            border-color: var(--oro);
+            box-shadow: 0 0 0 1px var(--oro);
+        }
+
+        input[type="number"].input {
+            text-align: center;
+        }
+
+        .info-box {
+            background: #f6f5f3;
+            border-left: 3px solid var(--oro);
+            padding: 7px 9px;
+            font-size: 11.5px;
+            color: var(--texto-2);
+            border-radius: 0 3px 3px 0;
+            line-height: 1.4;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: 30px;
+            padding: 0 12px;
+            border: 1px solid var(--borde-2);
+            border-radius: var(--radio);
+            background: #fff;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: var(--hover);
+        }
+
+        .btn:disabled {
+            opacity: 0.45;
+            cursor: default;
+        }
+
+        .btn.small {
+            height: 26px;
+            padding: 0 8px;
+            font-size: 12px;
+        }
+
+        .btn.ghost {
+            border-color: transparent;
+            background: transparent;
+        }
+
+        .btn.ghost:hover:not(:disabled) {
+            border-color: var(--borde);
+        }
+
+        .btn.danger {
+            color: var(--peligro);
+            border-color: #e8b4bd;
+        }
+
+        .btn.danger:hover:not(:disabled) {
+            background: #fbeef0;
+        }
+
+        .btn.primary {
+            background: var(--titulo);
+            color: #fff;
+            border-color: var(--titulo);
+            font-weight: 600;
+        }
+
+        .btn.primary:hover:not(:disabled) {
+            background: var(--titulo-2);
+        }
+
+        .btn.full {
+            width: 100%;
+        }
+
+        .file-btn input[type="file"] {
+            display: none;
+        }
+
+        .sub-options {
+            background: #faf9f8;
+            border: 1px solid var(--borde);
+            border-radius: var(--radio);
+            padding: 8px;
+            gap: 6px;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .label-row .val {
+            color: var(--oro);
+            font-weight: 600;
+            font-size: 11.5px;
+        }
+
+        input[type="range"] {
+            accent-color: var(--oro);
+            width: 100%;
+        }
+
+        .props.disabled-panel {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* Hoja */
+        .canvas-scroll {
+            min-width: 0;
+            min-height: 0;
+            overflow: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: var(--zona);
+        }
+
+        .certificate-canvas {
+            position: relative;
+            flex: 0 0 auto;
+            line-height: 0;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .certificate-canvas.empty {
+            width: 560px;
+            max-width: 100%;
+            aspect-ratio: 11 / 8.5;
+            border: 2px dashed var(--borde-2);
+            background: #fafafa;
+            box-shadow: none;
+        }
+
+        .canvas-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            line-height: 1.4;
+            color: var(--texto-2);
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .canvas-placeholder .ico {
+            width: 48px;
+            height: 48px;
+            color: var(--oro);
+            stroke-width: 1.4;
+        }
+
+        .certificate-canvas:not(.empty) .canvas-placeholder {
+            display: none;
+        }
+
+        .certificate-background {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        #fields-layer {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .field-el {
+            position: absolute;
+            white-space: nowrap;
+            line-height: 1;
+            cursor: move;
+            user-select: none;
+            outline: 1px dashed transparent;
+            outline-offset: 3px;
+            border-radius: 2px;
+        }
+
+        .show-guides .field-el {
+            outline-color: rgba(120, 120, 140, 0.55);
+        }
+
+        .field-el:hover {
+            outline-color: var(--oro) !important;
+        }
+
+        .field-el.selected {
+            outline: 2px solid var(--oro) !important;
+            background: rgba(184, 145, 63, 0.10) !important;
+        }
+
+        .maxwidth-guide {
+            position: absolute;
+            border-left: 1px dashed rgba(196, 49, 75, 0.85);
+            border-right: 1px dashed rgba(196, 49, 75, 0.85);
+            pointer-events: none;
+            background: rgba(196, 49, 75, 0.04);
+        }
+
+        .center-guide {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            border-left: 1px solid #0a84ff;
+            pointer-events: none;
+            display: none;
+        }
+
+        .center-guide.h {
+            top: 50%;
+            bottom: auto;
+            left: 0;
+            right: 0;
+            border-left: none;
+            border-top: 1px solid #0a84ff;
+        }
+
+        /* ---------------- Barra de estado ---------------- */
+        .statusbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 28px;
+            padding: 0 8px;
+            background: var(--titulo);
+            color: #e8e6f0;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .statusbar .sb-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .statusbar .sep {
+            width: 1px;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .statusbar button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 22px;
+            border: none;
+            border-radius: 3px;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+        }
+
+        .statusbar button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .statusbar button:disabled {
+            opacity: 0.35;
+        }
+
+        .statusbar .preview-indicator {
+            font-weight: 600;
+            min-width: 54px;
+            text-align: center;
+            color: #fff;
+        }
+
+        .statusbar .preview-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 32vw;
+            opacity: 0.85;
+        }
+
+        .statusbar .grow {
+            flex: 1;
+        }
+
+        .statusbar .warn {
+            color: #ffd27a;
+        }
+
+        .statusbar .hint {
+            color: #bdbacb;
+            font-size: 11.5px;
+            max-width: 30vw;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .toolbar-check {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+
+        /* ---------------- Modales ---------------- */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(20, 18, 40, 0.38);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9000;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        /* La ventana de correo puede abrirse desde la lista o desde "Una constancia" */
+        #email-modal {
+            z-index: 9200;
+        }
+
+        #progress-modal {
+            z-index: 9400;
+        }
+
+        #confirm-modal {
+            z-index: 9500;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+            width: min(1200px, 96vw);
+            overflow: hidden;
+        }
+
+        .modal.small {
+            width: min(440px, 92vw);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--borde);
+        }
+
+        .modal-header h3 {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 14px 16px;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            padding: 10px 16px;
+            border-top: 1px solid var(--borde);
+            background: #faf9f8;
+        }
+
+        .close-x {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: var(--texto-2);
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+        }
+
+        .close-x:hover {
+            background: var(--hover);
+        }
+
+        .panel-box {
+            border: 1px solid var(--borde);
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .panel-box h4 {
+            font-size: 13px;
+            color: var(--titulo);
+        }
+
+        .email-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .chip {
+            background: var(--oro-claro);
+            border: 1px solid var(--oro-medio);
+            border-radius: 999px;
+            padding: 1px 9px;
+            font-size: 11.5px;
+            cursor: pointer;
+        }
+
+        .chip:hover {
+            background: var(--oro-medio);
+        }
+
+        .table-wrap {
+            border: 1px solid var(--borde);
+            border-radius: 6px;
+            overflow: auto;
+            max-height: 52vh;
+        }
+
+        table.students {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table.students th {
+            position: sticky;
+            top: 0;
+            background: #f3f2f1;
+            text-align: left;
+            padding: 7px 6px;
+            font-size: 12px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--borde);
+            z-index: 1;
+        }
+
+        table.students td {
+            padding: 2px 4px;
+            border-bottom: 1px solid #f0f0f2;
+        }
+
+        table.students td.num {
+            color: var(--texto-2);
+            width: 40px;
+            text-align: right;
+            font-size: 11.5px;
+        }
+
+        table.students td.code {
+            width: 120px;
+        }
+
+        table.students td.event {
+            width: 170px;
+        }
+
+        table.students td.folio {
+            width: 100px;
+        }
+
+        table.students td.actions {
+            width: 70px;
+            white-space: nowrap;
+        }
+
+        table.students .cell-input {
+            width: 100%;
+            height: 26px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            padding: 0 6px;
+            outline: none;
+        }
+
+        table.students .cell-input:hover {
+            border-color: var(--borde);
+        }
+
+        table.students .cell-input:focus {
+            border-color: var(--oro);
+            background: #fff;
+        }
+
+        table.students .cell-input.missing {
+            border-color: #f0c27a;
+            background: #fff9ef;
+        }
+
+        table.students tr.current td {
+            background: var(--oro-claro);
+        }
+
+        .icon-btn {
+            background: none;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            cursor: pointer;
+            padding: 2px 5px;
+        }
+
+        .icon-btn:hover {
+            border-color: var(--borde);
+            background: var(--hover);
+        }
+
+        .empty-row {
+            text-align: center;
+            color: var(--texto-2);
+            padding: 24px !important;
+        }
+
+        .status-ok {
+            color: var(--ok);
+            font-weight: 700;
+        }
+
+        .status-err {
+            color: var(--peligro);
+            font-weight: 700;
+            cursor: help;
+        }
+
+        .badge {
+            display: inline-block;
+            border-radius: 3px;
+            padding: 0 5px;
+            font-size: 10.5px;
+            border: 1px solid var(--borde);
+            color: #a19f9d;
+        }
+
+        .badge.on {
+            background: var(--oro-claro);
+            border-color: var(--oro-medio);
+            color: var(--texto);
+            font-weight: 700;
+        }
+
+        .font-list {
+            display: flex;
+            flex-direction: column;
+            max-height: 40vh;
+            overflow: auto;
+            border: 1px solid var(--borde);
+            border-radius: 6px;
+        }
+
+        .font-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-bottom: 1px solid #f0f0f2;
+        }
+
+        .font-item .sample {
+            flex: 1;
+            font-size: 17px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .font-group-title {
+            background: #f3f2f1;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--texto-2);
+            padding: 5px 10px;
+            position: sticky;
+            top: 0;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 8px;
+            background: #ececf0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--oro);
+            transition: width 0.2s;
+        }
+
+        .progress-info {
+            color: var(--texto-2);
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .progress-pct {
+            text-align: center;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--titulo);
+        }
+
+        /* ---------------- Notificaciones ---------------- */
+        #toast-container {
+            position: fixed;
+            right: 14px;
+            bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 12000;
+            max-width: 420px;
+        }
+
+        .toast {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            background: #fff;
+            border: 1px solid var(--borde);
+            border-left: 4px solid var(--titulo);
+            border-radius: 6px;
+            padding: 10px 10px 10px 12px;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.16);
+            animation: toast-in 0.2s ease;
+            line-height: 1.4;
+        }
+
+        .toast.success {
+            border-left-color: var(--ok);
+        }
+
+        .toast.error {
+            border-left-color: var(--peligro);
+        }
+
+        .toast.warning {
+            border-left-color: var(--aviso);
+        }
+
+        .toast .toast-msg {
+            flex: 1;
+            white-space: pre-line;
+        }
+
+        .toast.hide {
+            opacity: 0;
+            transform: translateX(16px);
+            transition: all 0.25s;
+        }
+
+        @keyframes toast-in {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        kbd {
+            background: #fff;
+            border: 1px solid var(--borde-2);
+            border-bottom-width: 2px;
+            border-radius: 3px;
+            padding: 0 4px;
+            font-size: 10.5px;
+            font-family: inherit;
+        }
+
+        .ctl-rows.tight {
+            gap: 2px;
+        }
+
+        .calib-pop {
+            position: fixed;
+            z-index: 8000;
+            background: #fff;
+            border: 1px solid var(--borde-2);
+            border-radius: 6px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+            padding: 10px 12px;
+            width: 230px;
+        }
+
+        .layout-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 26px;
+            padding: 0 10px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 13px;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .layout-switch:hover {
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .segmented.opt-seg {
+            display: flex;
+        }
+
+        .segmented.opt-seg button {
+            flex: 1;
+            height: 32px;
+            font-size: 12.5px;
+        }
+
+        .segmented button:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .pane-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .pane-actions .btn {
+            flex: 1;
+        }
+
+        /* Ventanas más angostas: el panel lateral se reduce */
+        @media (max-width: 1250px) {
+            .body {
+                grid-template-columns: 230px 1fr;
+            }
+        }
+        /* =====================================================
+           MODO EXPRESS: 4 pasos, letras grandes, sin opciones de más
+           ===================================================== */
+        .ex-oculto {
+            display: none !important;
+        }
+
+        .ex-app {
+            grid-template-rows: auto 1fr;
+        }
+
+        .ex-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            margin-left: 6px;
+            padding: 1px 8px;
+            border-radius: 10px;
+            background: var(--oro);
+            color: #1d1b33;
+            font-size: 11.5px;
+            font-weight: 700;
+        }
+
+        .ex-badge .ico {
+            width: 13px;
+            height: 13px;
+            color: #1d1b33 !important;
+        }
+
+        .ex-body {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            min-height: 0;
+        }
+
+        .ex-steps {
+            background: #fff;
+            border-right: 1px solid var(--borde);
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ex-step {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            border: 1px solid var(--borde);
+            border-radius: 12px;
+            background: #fcfcfd;
+        }
+
+        .ex-step.hecho {
+            border-color: #b7dcc4;
+            background: #f5fbf7;
+        }
+
+        .ex-num {
+            flex: 0 0 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--titulo);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .ex-step.hecho .ex-num {
+            background: var(--ok);
+            font-size: 0;
+        }
+
+        .ex-step.hecho .ex-num::after {
+            content: '✓';
+            font-size: 18px;
+        }
+
+        .ex-cont {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .ex-cont h3 {
+            font-size: 16px;
+            color: var(--titulo);
+            margin-top: 5px;
+        }
+
+        .ex-hint {
+            font-size: 13px;
+            color: var(--texto-2);
+            line-height: 1.4;
+        }
+
+        .ex-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 40px;
+            padding: 0 14px;
+            border: 1px solid var(--borde-2);
+            border-radius: 10px;
+            background: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .ex-btn:hover:not(:disabled) {
+            background: var(--hover);
+        }
+
+        .ex-btn:disabled {
+            opacity: 0.45;
+            cursor: default;
+        }
+
+        .ex-btn.primario {
+            background: var(--titulo);
+            border-color: var(--titulo);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .ex-btn.primario:hover:not(:disabled) {
+            background: var(--titulo-2);
+        }
+
+        .ex-btn.grande {
+            min-height: 52px;
+            font-size: 16px;
+        }
+
+        .ex-btn input[type="file"],
+        .ex-link input[type="file"] {
+            display: none;
+        }
+
+        .ex-links,
+        .ex-fila {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .ex-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border: none;
+            background: none;
+            color: var(--titulo);
+            font-size: 13px;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 6px;
+        }
+
+        .ex-link:hover:not(:disabled) {
+            background: var(--hover);
+            text-decoration: underline;
+        }
+
+        .ex-link.peligro {
+            color: var(--peligro);
+        }
+
+        .ex-link:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .ex-props {
+            border-top: 1px dashed var(--borde);
+            padding-top: 8px;
+            gap: 8px;
+        }
+
+        .ex-sel {
+            font-size: 12.5px;
+            color: var(--texto-2);
+        }
+
+        .ex-sel b {
+            color: var(--oro);
+        }
+
+        .icon-only.grande,
+        .color-btn.grande {
+            width: 32px;
+            height: 30px;
+            border-color: var(--borde);
+        }
+
+        #prop-styles button {
+            height: 28px;
+            min-width: 32px;
+        }
+
+        .ex-hoja {
+            display: grid;
+            grid-template-rows: 1fr auto;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        .ex-steps .field-row {
+            padding: 7px 8px;
+            font-size: 14px;
+        }
+
+        .ex-steps .field-row-type {
+            display: none;
+        }
+
+        /* Ventana Generar simplificada: solo "un PDF por persona / todos en uno" y la carpeta */
+        body.express #gen-destino,
+        body.express #gen-modal .stack:has(#gen-agrupar),
+        body.express #gen-nombre-wrap,
+        body.express #gen-modal .stack:has(#gen-fondo) {
+            display: none !important;
+        }
+
+    </style>
+</head>
+
+<body class="express">
+        <!-- Iconos: Lucide (licencia ISC, lucide.dev) -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+        <symbol id="i-settings-2" viewBox="0 0 24 24"><path d="M14 17H5" /> <path d="M19 7h-9" /> <circle cx="17" cy="17" r="3" /> <circle cx="7" cy="7" r="3" /></symbol>
+        <symbol id="i-zap" viewBox="0 0 24 24"><path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></symbol>
+        <symbol id="i-clipboard-paste" viewBox="0 0 24 24"><path d="M11 14h10" /> <path d="M16 4h2a2 2 0 0 1 2 2v1.344" /> <path d="m17 18 4-4-4-4" /> <path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 1.793-1.113" /> <rect x="8" y="2" width="8" height="4" rx="1" /></symbol>
+        <symbol id="i-file-plus" viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path d="M14 2v5a1 1 0 0 0 1 1h5" /> <path d="M9 15h6" /> <path d="M12 18v-6" /></symbol>
+        <symbol id="i-circle-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /> <path d="M12 17h.01" /></symbol>
+        <symbol id="i-a-arrow-down" viewBox="0 0 24 24"><path d="m14 12 4 4 4-4" /> <path d="M18 16V7" /> <path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16" /> <path d="M3.304 13h6.392" /></symbol>
+        <symbol id="i-a-arrow-up" viewBox="0 0 24 24"><path d="m14 11 4-4 4 4" /> <path d="M18 16V7" /> <path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16" /> <path d="M3.304 13h6.392" /></symbol>
+        <symbol id="i-align-center" viewBox="0 0 24 24"><path d="M21 5H3" /> <path d="M17 12H7" /> <path d="M19 19H5" /></symbol>
+        <symbol id="i-align-horizontal-justify-center" viewBox="0 0 24 24"><rect width="6" height="14" x="2" y="5" rx="2" /> <rect width="6" height="10" x="16" y="7" rx="2" /> <path d="M12 2v20" /></symbol>
+        <symbol id="i-align-left" viewBox="0 0 24 24"><path d="M21 5H3" /> <path d="M15 12H3" /> <path d="M17 19H3" /></symbol>
+        <symbol id="i-align-right" viewBox="0 0 24 24"><path d="M21 5H3" /> <path d="M21 12H9" /> <path d="M21 19H7" /></symbol>
+        <symbol id="i-award" viewBox="0 0 24 24"><path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526" /> <circle cx="12" cy="8" r="6" /></symbol>
+        <symbol id="i-baseline" viewBox="0 0 24 24"><path d="M4 20h16" /> <path d="m6 16 6-12 6 12" /> <path d="M8 12h8" /></symbol>
+        <symbol id="i-bold" viewBox="0 0 24 24"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8" /></symbol>
+        <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></symbol>
+        <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></symbol>
+        <symbol id="i-columns-3" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" /> <path d="M9 3v18" /> <path d="M15 3v18" /></symbol>
+        <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /> <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></symbol>
+        <symbol id="i-file-image" viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path d="M14 2v5a1 1 0 0 0 1 1h5" /> <circle cx="10" cy="12" r="2" /> <path d="m20 17-1.296-1.296a2.41 2.41 0 0 0-3.408 0L9 22" /></symbol>
+        <symbol id="i-file-spreadsheet" viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path d="M14 2v5a1 1 0 0 0 1 1h5" /> <path d="M8 13h2" /> <path d="M14 13h2" /> <path d="M8 17h2" /> <path d="M14 17h2" /></symbol>
+        <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path d="M14 2v5a1 1 0 0 0 1 1h5" /> <path d="M10 9H8" /> <path d="M16 13H8" /> <path d="M16 17H8" /></symbol>
+        <symbol id="i-filter" viewBox="0 0 24 24"><path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z" /></symbol>
+        <symbol id="i-fold-horizontal" viewBox="0 0 24 24"><path d="M2 12h6" /> <path d="M22 12h-6" /> <path d="M12 2v2" /> <path d="M12 8v2" /> <path d="M12 14v2" /> <path d="M12 20v2" /> <path d="m19 9-3 3 3 3" /> <path d="m5 15 3-3-3-3" /></symbol>
+        <symbol id="i-folder-open" viewBox="0 0 24 24"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" /></symbol>
+        <symbol id="i-id-card" viewBox="0 0 24 24"><path d="M13 19a4 4 0 00-8 0" /> <path d="M16 10h2" /> <path d="M16 14h2" /> <circle cx="9" cy="12" r="3" /> <rect x="2" y="5" width="20" height="14" rx="2" /></symbol>
+        <symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /> <circle cx="9" cy="9" r="2" /> <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></symbol>
+        <symbol id="i-italic" viewBox="0 0 24 24"><line x1="19" x2="10" y1="4" y2="4" /> <line x1="14" x2="5" y1="20" y2="20" /> <line x1="15" x2="9" y1="4" y2="20" /></symbol>
+        <symbol id="i-mail" viewBox="0 0 24 24"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" /> <rect x="2" y="4" width="20" height="16" rx="2" /></symbol>
+        <symbol id="i-move-horizontal" viewBox="0 0 24 24"><path d="m18 8 4 4-4 4" /> <path d="M2 12h20" /> <path d="m6 8-4 4 4 4" /></symbol>
+        <symbol id="i-package" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /> <path d="M12 22V12" /> <polyline points="3.29 7 12 12 20.71 7" /> <path d="m7.5 4.27 9 5.15" /></symbol>
+        <symbol id="i-panels-top-left" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" /> <path d="M3 9h18" /> <path d="M9 21V9" /></symbol>
+        <symbol id="i-pen-line" viewBox="0 0 24 24"><path d="M13 21h8" /> <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /></symbol>
+        <symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /> <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" /> <rect x="6" y="14" width="12" height="8" rx="1" /></symbol>
+        <symbol id="i-rectangle-horizontal" viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2" /></symbol>
+        <symbol id="i-rectangle-vertical" viewBox="0 0 24 24"><rect width="12" height="20" x="6" y="2" rx="2" /></symbol>
+        <symbol id="i-ruler" viewBox="0 0 24 24"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z" /> <path d="m14.5 12.5 2-2" /> <path d="m11.5 9.5 2-2" /> <path d="m8.5 6.5 2-2" /> <path d="m17.5 15.5 2-2" /></symbol>
+        <symbol id="i-save" viewBox="0 0 24 24"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /> <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" /> <path d="M7 3v4a1 1 0 0 0 1 1h7" /></symbol>
+        <symbol id="i-scaling" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /> <path d="M14 15H9v-5" /> <path d="M16 3h5v5" /> <path d="M21 3 9 15" /></symbol>
+        <symbol id="i-scan-search" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2" /> <path d="M17 3h2a2 2 0 0 1 2 2v2" /> <path d="M21 17v2a2 2 0 0 1-2 2h-2" /> <path d="M7 21H5a2 2 0 0 1-2-2v-2" /> <circle cx="12" cy="12" r="3" /> <path d="m16 16-1.9-1.9" /></symbol>
+        <symbol id="i-send" viewBox="0 0 24 24"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" /> <path d="m21.854 2.147-10.94 10.939" /></symbol>
+        <symbol id="i-text-cursor-input" viewBox="0 0 24 24"><path d="M12 20h-1a2 2 0 0 1-2-2 2 2 0 0 1-2 2H6" /> <path d="M13 8h7a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-7" /> <path d="M5 16H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h1" /> <path d="M6 4h1a2 2 0 0 1 2 2 2 2 0 0 1 2-2h1" /> <path d="M9 6v12" /></symbol>
+        <symbol id="i-trash-2" viewBox="0 0 24 24"><path d="M10 11v6" /> <path d="M14 11v6" /> <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /> <path d="M3 6h18" /> <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></symbol>
+        <symbol id="i-type" viewBox="0 0 24 24"><path d="M12 4v16" /> <path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2" /> <path d="M9 20h6" /></symbol>
+        <symbol id="i-underline" viewBox="0 0 24 24"><path d="M6 4v6a6 6 0 0 0 12 0V4" /> <line x1="4" x2="20" y1="20" y2="20" /></symbol>
+        <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <path d="M16 3.128a4 4 0 0 1 0 7.744" /> <path d="M22 21v-2a4 4 0 0 0-3-3.87" /> <circle cx="9" cy="7" r="4" /></symbol>
+    </svg>
+
+    <div class="app ex-app">
+        <!-- ===================== BARRA DE TÍTULO ===================== -->
+        <header class="titlebar">
+            <div class="logo">
+                <svg class="ico"><use href="#i-award" /></svg>
+                Generador de Constancias <span class="ex-badge"><svg class="ico"><use href="#i-zap" /></svg>Express</span>
+            </div>
+            <div class="doc" id="summary-file">Sin lista</div>
+            <button class="layout-switch" id="help-btn" title="Ver el tutorial (F1)">
+                <svg class="ico"><use href="#i-circle-help" /></svg>Tutorial</button>
+            <button class="layout-switch" id="advanced-btn" title="Todas las opciones (fuentes, estilos, correo masivo, calibración…)">
+                <svg class="ico"><use href="#i-settings-2" /></svg>Modo avanzado</button>
+            <span class="ver">v3.1</span>
+        </header>
+
+        <div class="ex-body">
+            <!-- ===================== LOS 4 PASOS ===================== -->
+            <aside class="ex-steps">
+
+                <section class="ex-step" id="ex-paso-1">
+                    <div class="ex-num">1</div>
+                    <div class="ex-cont">
+                        <h3>Diseño</h3>
+                        <p class="ex-hint">La imagen de tu constancia (JPG o PNG), con logos y firmas.</p>
+                        <label class="ex-btn primario">
+                            <svg class="ico"><use href="#i-image" /></svg>Elegir imagen
+                            <input type="file" id="image-upload" accept="image/png,image/jpeg" />
+                        </label>
+                        <div class="ex-links">
+                            <button class="ex-link" data-accion="abrir-plantilla" title="Abre un diseño que guardaste antes">
+                                <svg class="ico"><use href="#i-folder-open" /></svg>Abrir diseño guardado</button>
+                            <input type="file" id="template-upload" accept=".json,application/json" style="display:none" />
+                            <button class="ex-link" data-accion="nueva-plantilla" title="Empezar un diseño desde cero (tu lista no se borra)">
+                                <svg class="ico"><use href="#i-file-plus" /></svg>Diseño nuevo</button>
+                            <button class="ex-link" id="save-template-btn" title="Guarda imagen, textos y posiciones para la próxima vez">
+                                <svg class="ico"><use href="#i-save" /></svg>Guardar diseño</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ex-step" id="ex-paso-2">
+                    <div class="ex-num">2</div>
+                    <div class="ex-cont">
+                        <h3>Personas</h3>
+                        <p class="ex-hint">Tu lista en Excel o CSV (con una columna <b>Nombre</b>), o escribe una sola. <span class="ayuda-formato" tabindex="0" aria-label="¿Cómo debe ser la tabla?">?</span></p>
+                        <label class="ex-btn primario">
+                            <svg class="ico"><use href="#i-file-spreadsheet" /></svg>Cargar Excel o CSV
+                            <input type="file" id="csv-upload" accept=".csv,.xlsx,.xls,.xlsm,.ods,text/csv" multiple />
+                        </label>
+                        <button class="ex-btn paste-btn" title="Pega una tabla copiada de Excel o Google Sheets"><svg class="ico"><use href="#i-clipboard-paste" /></svg>Pegar tabla de Excel</button>
+                        <button class="ex-btn" id="manual-btn"><svg class="ico"><use href="#i-pen-line" /></svg>Escribir una a mano</button>
+                        <div class="ex-links">
+                            <button class="ex-link" id="open-list-btn"><svg class="ico"><use href="#i-users" /></svg>Ver / corregir lista (<b id="summary-count">0</b>)</button>
+                            <button class="ex-link peligro" id="clear-list-btn" disabled><svg class="ico"><use href="#i-trash-2" /></svg>Borrar</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ex-step" id="ex-paso-3">
+                    <div class="ex-num">3</div>
+                    <div class="ex-cont">
+                        <h3>Textos</h3>
+                        <p class="ex-hint">Marca los que llevará y <b>arrástralos con el mouse</b> en la hoja.</p>
+                        <div id="fields-list" class="fields-list"></div>
+                        <div id="props-panel" class="props ex-props">
+                            <div class="ex-sel">Seleccionado: <b id="prop-title"></b></div>
+                            <div id="prop-content" class="stack" style="gap:6px"></div>
+                            <div class="ex-fila">
+                                <select id="prop-font" class="r-select" title="Tipo de letra" style="flex:1;height:30px"></select>
+                            </div>
+                            <div class="ex-fila">
+                                <button class="icon-only grande" id="size-down" title="Más chico"><svg class="ico"><use href="#i-a-arrow-down" /></svg></button>
+                                <input type="number" id="prop-size" class="r-input num" min="2" max="150" step="0.5" title="Tamaño" style="width:56px;height:30px">
+                                <button class="icon-only grande" id="size-up" title="Más grande"><svg class="ico"><use href="#i-a-arrow-up" /></svg></button>
+                                <label class="color-btn grande" title="Color">
+                                    <svg class="ico"><use href="#i-baseline" /></svg><span class="swatch" id="prop-color-hex-swatch"></span>
+                                    <input type="color" id="prop-color" value="#000000" />
+                                </label>
+                                <div class="segmented" id="prop-styles">
+                                    <button data-style="negrita" title="Negrita"><svg class="ico"><use href="#i-bold" /></svg></button>
+                                    <button data-style="cursiva" class="ex-oculto"></button>
+                                    <button data-style="subrayado" class="ex-oculto"></button>
+                                    <button data-style="sombra" class="ex-oculto"></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="ex-step" id="ex-paso-4">
+                    <div class="ex-num">4</div>
+                    <div class="ex-cont">
+                        <h3>¡Listo!</h3>
+                        <p class="ex-hint">Revisa con ◀ ▶ (abajo) y genera.</p>
+                        <button class="ex-btn primario grande" id="generate-pdf-btn" disabled>
+                            <svg class="ico"><use href="#i-package" /></svg><span id="generate-pdf-label">Generar</span></button>
+                        <div class="ex-fila">
+                            <button class="ex-btn" id="print-btn"><svg class="ico"><use href="#i-printer" /></svg>Imprimir</button>
+                            <button class="ex-btn" id="open-email-btn"><svg class="ico"><use href="#i-mail" /></svg>Correo</button>
+                        </div>
+                        <button class="ex-link" id="generate-current-btn"><svg class="ico"><use href="#i-file-text" /></svg>Descargar solo la que estoy viendo</button>
+                    </div>
+                </section>
+            </aside>
+
+            <!-- ===================== HOJA ===================== -->
+            <div class="ex-hoja">
+                <div class="canvas-scroll" id="canvas-scroll">
+                    <div id="certificate-canvas" class="certificate-canvas empty">
+                        <div class="canvas-placeholder">
+                            <svg class="ico"><use href="#i-file-image" /></svg>
+                            <div><b>Paso 1: elige la imagen de tu constancia</b><br>Aquí verás cómo queda.</div>
+                        </div>
+                        <img id="certificate-background" class="certificate-background" style="display:none" alt="" />
+                        <div id="fields-layer">
+                            <div class="center-guide" id="guide-v"></div>
+                            <div class="center-guide h" id="guide-h"></div>
+                        </div>
+                    </div>
+                </div>
+                <footer class="statusbar">
+                    <button id="prev-btn" title="Anterior"><svg class="ico"><use href="#i-chevron-left" /></svg></button>
+                    <span id="preview-indicator" class="preview-indicator">Ejemplo</span>
+                    <button id="next-btn" title="Siguiente"><svg class="ico"><use href="#i-chevron-right" /></svg></button>
+                    <span id="preview-name" class="preview-name">Carga tu lista para ver las constancias reales</span>
+                    <span class="grow"></span>
+                    <span id="page-info" class="hint"></span>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controles del modo avanzado: el Modo Express los usa con sus valores, pero no se muestran -->
+    <div class="ex-oculto" aria-hidden="true">
+        <select id="page-size"><option value="imagen">imagen</option><option value="carta">carta</option><option value="oficio">oficio</option><option value="a4">a4</option></select>
+        <div id="page-orientation"><button data-o="horizontal"></button><button data-o="vertical"></button></div>
+        <div id="page-fit-wrap"><select id="page-fit"><option value="estirar">estirar</option><option value="rellenar">rellenar</option><option value="ajustar">ajustar</option></select></div>
+        <input type="number" id="adjust-x-input" value="0"><input type="number" id="adjust-y-input" value="0">
+        <input type="checkbox" id="toggle-guides" checked>
+        <button id="longest-btn"></button>
+        <div id="event-filter-wrap"><select id="event-filter"></select></div>
+        <span id="summary-codes"></span><span id="summary-emails"></span><span id="summary-warning"></span>
+        <input type="range" id="prop-size-range" min="2" max="60" step="0.5">
+        <select id="prop-case"><option value="none"></option><option value="upper"></option><option value="title"></option></select>
+        <input type="number" id="prop-maxwidth"><input type="number" id="prop-x"><input type="number" id="prop-y">
+        <button id="center-h-btn"></button>
+        <div id="prop-align"><button data-align="left"></button><button data-align="center"></button><button data-align="right"></button></div>
+        <input type="range" id="prop-spacing"><span id="prop-spacing-val"></span>
+        <div id="shadow-options"><input type="color" id="prop-shadow-color"><input type="range" id="prop-shadow-dist"><span id="prop-shadow-dist-val"></span>
+            <input type="range" id="prop-shadow-op"><span id="prop-shadow-op-val"></span></div>
+        <span id="prop-style-hint"></span><span id="prop-color-hex"></span><span id="prop-size-val"></span>
+        <button id="manage-fonts-btn"></button><button id="add-text-field-btn"></button><button id="add-column-field-btn"></button>
+    </div>
+
+    <!-- ===================================================
+         MODAL: LISTA DE ALUMNOS
+         =================================================== -->
+    <div class="modal-backdrop" id="list-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>👥 Lista de alumnos <span id="list-count" class="hint"></span></h3>
+                <button class="close-x" data-close="list-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <input type="search" id="list-search" class="input" placeholder="🔎 Buscar por nombre o código…"
+                        style="flex:3" />
+                    <button id="sort-list-btn" class="btn small" style="flex:0">A→Z</button>
+                    <button id="export-csv-btn" class="btn small" style="flex:0">⬇️ CSV</button>
+                    <button id="export-xlsx-btn" class="btn small" style="flex:0">⬇️ Excel</button>
+                    <button id="csv-example-btn" class="btn small" style="flex:0" title="Descarga un CSV con el formato recomendado">📄 CSV de ejemplo</button>
+                </div>
+                <div class="row" id="list-review-row" style="align-items:stretch">
+                    <div id="list-review" class="info-box" style="flex:1;display:none"></div>
+                    <label class="toolbar-check" style="flex:0"><input type="checkbox" id="list-only-issues"> Solo filas con posibles errores</label>
+                </div>
+                <div class="table-wrap">
+                    <table class="students">
+                        <thead>
+                            <tr>
+                                <th style="text-align:right">#</th>
+                                <th>Código</th>
+                                <th>Nombre completo</th>
+                                <th>Correo</th>
+                                <th>Evento / taller</th>
+                                <th>Folio</th>
+                                <th title="Estado del envío por correo">✉️</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="list-tbody"></tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <input type="text" id="new-code" class="input" placeholder="Código (opcional)" style="flex:1" />
+                    <input type="text" id="new-name" class="input" placeholder="Nombre completo del alumno"
+                        style="flex:2.2" />
+                    <input type="email" id="new-email" class="input" placeholder="Correo (opcional)" style="flex:1.6" />
+                    <input type="text" id="new-event" class="input" placeholder="Evento (opcional)" style="flex:1.4" />
+                    <button id="add-student-btn" class="btn" style="flex:0">＋ Agregar</button>
+                </div>
+                <label class="toolbar-check"><input type="checkbox" id="review-after-load" checked> Abrir esta revisión cada vez que cargue un CSV</label>
+                <p class="hint">Los cambios se guardan al momento. 👁 muestra la constancia de ese alumno en la vista
+                    previa.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIRMACIÓN GENÉRICA -->
+    <div class="modal-backdrop" id="confirm-modal">
+        <div class="modal small">
+            <div class="modal-header">
+                <h3 id="confirm-title">Confirmar</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message" style="white-space:pre-line; line-height:1.45"></p>
+            </div>
+            <div class="modal-footer">
+                <button id="confirm-cancel" class="btn">Cancelar</button>
+                <button id="confirm-ok" class="btn primary" style="padding:0.55rem 1rem">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PROGRESO -->
+    <div class="modal-backdrop" id="progress-modal">
+        <div class="modal small">
+            <div class="modal-header">
+                <h3 id="progress-title">Generando constancias…</h3>
+            </div>
+            <div class="modal-body">
+                <div class="progress-pct" id="progress-pct">0%</div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-info" id="progress-info">Preparando…</div>
+            </div>
+            <div class="modal-footer">
+                <button id="progress-cancel" class="btn danger">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================
+         MODAL: FUENTES
+         =================================================== -->
+    <div class="modal-backdrop" id="fonts-modal">
+        <div class="modal" style="width:min(720px,94vw)">
+            <div class="modal-header">
+                <h3>🔤 Fuentes disponibles</h3>
+                <button class="close-x" data-close="fonts-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="hint">Las etiquetas indican qué estilos <b>reales</b> tiene cada fuente
+                    (N = negrita, K = cursiva, NK = negrita cursiva). Si falta alguno, el programa lo simula.</p>
+                <div id="font-list" class="font-list"></div>
+
+                <div class="panel-box" id="font-import-box">
+                    <h4>➕ Importar una fuente (.ttf)</h4>
+                    <p class="hint">Puedes usar fuentes de tu computadora (carpeta <b>C:\Windows\Fonts</b>). Por ejemplo,
+                        para tener <b>Calibri en negrita real</b> importa <i>calibrib.ttf</i> en la familia “Calibri” con
+                        estilo “Negrita”.</p>
+                    <div class="row">
+                        <label class="btn small file-btn" style="flex:0">
+                            📁 Elegir archivo .ttf
+                            <input type="file" id="font-file" accept=".ttf" />
+                        </label>
+                        <span id="font-file-name" class="hint">Ningún archivo</span>
+                    </div>
+                    <div class="row">
+                        <div class="stack">
+                            <span class="label">Familia</span>
+                            <select id="font-import-family" class="input"></select>
+                        </div>
+                        <div class="stack" id="font-new-name-wrap">
+                            <span class="label">Nombre de la nueva familia</span>
+                            <input id="font-new-name" class="input" placeholder="Ej. Mi Fuente" />
+                        </div>
+                        <div class="stack">
+                            <span class="label">Estilo</span>
+                            <select id="font-import-style" class="input">
+                                <option value="normal">Normal</option>
+                                <option value="bold">Negrita</option>
+                                <option value="italic">Cursiva</option>
+                                <option value="bolditalic">Negrita cursiva</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="font-import-btn" class="btn">Importar fuente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================
+         MODAL: ENVÍO POR CORREO
+         =================================================== -->
+    <div class="modal-backdrop" id="email-modal">
+        <div class="modal" style="width:min(1050px,95vw)">
+            <div class="modal-header">
+                <h3>✉️ Enviar constancias por correo</h3>
+                <button class="close-x" data-close="email-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="email-unavailable" class="info-box" style="display:none"></div>
+                <div class="email-grid">
+                    <!-- Cuenta -->
+                    <div class="panel-box">
+                        <h4>1. Cuenta que envía</h4>
+                        <div class="stack">
+                            <span class="label">Proveedor</span>
+                            <select id="smtp-provider" class="input">
+                                <option value="gmail">Gmail / Google Workspace (recomendado)</option>
+                                <option value="outlook">Outlook / Office 365</option>
+                                <option value="personalizado">Otro servidor (SMTP personalizado)</option>
+                            </select>
+                        </div>
+                        <div id="smtp-custom" class="stack" style="display:none">
+                            <div class="row">
+                                <div class="stack" style="flex:2"><span class="label">Servidor SMTP</span>
+                                    <input id="smtp-host" class="input" placeholder="smtp.ejemplo.com"></div>
+                                <div class="stack"><span class="label">Puerto</span>
+                                    <input id="smtp-port" type="number" class="input" value="587"></div>
+                            </div>
+                            <div class="stack"><span class="label">Seguridad</span>
+                                <select id="smtp-security" class="input">
+                                    <option value="starttls">STARTTLS (normalmente puerto 587)</option>
+                                    <option value="ssl">SSL/TLS (normalmente puerto 465)</option>
+                                    <option value="ninguna">Ninguna (no recomendado)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="stack"><span class="label">Tu correo</span>
+                                <input id="smtp-user" type="email" class="input" placeholder="tucorreo@gmail.com"></div>
+                            <div class="stack"><span class="label">Nombre que verán</span>
+                                <input id="smtp-name" class="input" placeholder="Coordinación de Ingeniería"></div>
+                        </div>
+                        <div class="stack">
+                            <span class="label">Contraseña de aplicación</span>
+                            <div class="row">
+                                <input id="smtp-pass" type="password" class="input" autocomplete="off" style="flex:1">
+                                <button id="smtp-pass-toggle" class="btn small ghost" style="flex:0" title="Mostrar / ocultar">👁</button>
+                            </div>
+                        </div>
+                        <label class="toolbar-check" style="color:var(--text)"><input type="checkbox" id="smtp-remember">
+                            Recordar la contraseña en esta computadora (cifrada)</label>
+                        <div class="info-box" id="smtp-help"></div>
+                        <button id="smtp-test-btn" class="btn">🔌 Probar conexión</button>
+                    </div>
+
+                    <!-- Mensaje -->
+                    <div class="panel-box">
+                        <h4>2. Mensaje</h4>
+                        <div class="stack"><span class="label">Asunto</span>
+                            <input id="mail-subject" class="input"></div>
+                        <div class="stack"><span class="label">Texto del correo</span>
+                            <textarea id="mail-body" class="input" rows="6"></textarea></div>
+                        <div class="stack">
+                            <span class="hint">Haz clic para insertar datos de cada alumno:</span>
+                            <div class="chips" id="mail-chips">
+                                <span class="chip" data-tag="{nombre}">{nombre}</span>
+                                <span class="chip" data-tag="{codigo}">{codigo}</span>
+                                <span class="chip" data-tag="{correo}">{correo}</span>
+                                <span class="chip" data-tag="{folio}">{folio}</span>
+                                <span class="chip" data-tag="{evento}">{evento}</span>
+                                <span class="chip" data-tag="{fecha}">{fecha}</span>
+                            </div>
+                        </div>
+                        <div class="stack"><span class="label">Vista previa (alumno actual)</span>
+                            <div id="mail-preview" class="info-box" style="white-space:pre-line;max-height:80px;overflow:auto"></div></div>
+                    </div>
+                </div>
+
+                <!-- Envío -->
+                <div class="panel-box">
+                    <h4>3. Envío</h4>
+                    <div id="mail-stats" class="hint" style="font-size:0.85rem"></div>
+                    <div class="row" style="flex-wrap:wrap">
+                        <label class="toolbar-check" style="color:var(--text);flex:0"><input type="checkbox" id="mail-only-pending" checked>
+                            Solo a quienes aún no se les ha enviado</label>
+                        <label class="toolbar-check" style="color:var(--text);flex:0" title="Si un alumno tiene constancias de varios talleres, le llegan todas juntas">
+                            <input type="checkbox" id="mail-group" checked> Un solo correo por alumno con todas sus constancias</label>
+                        <div class="row" style="flex:0;white-space:nowrap">
+                            <span class="label">Pausa entre correos</span>
+                            <input id="mail-delay" type="number" class="input" min="0" max="60" step="0.5" value="2" style="width:70px">
+                            <span class="hint">seg.</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <button id="mail-test-btn" class="btn" title="Te envía a ti mismo la constancia que se ve en la vista previa">🧪 Enviarme una prueba</button>
+                        <button id="mail-report-btn" class="btn ghost">⬇️ Reporte de envíos (CSV)</button>
+                        <button id="mail-send-btn" class="btn primary">🚀 Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ===================================================
+         MODAL: UNA CONSTANCIA (captura manual)
+         =================================================== -->
+    <div class="modal-backdrop" id="manual-modal">
+        <div class="modal small" style="width:min(520px,94vw)">
+            <div class="modal-header">
+                <h3>✍️ Una constancia (captura manual)</h3>
+                <button class="close-x" data-close="manual-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="hint">Escribe los datos y la hoja se actualiza mientras escribes. No necesitas cargar un CSV.</p>
+                <div class="stack"><span class="label">Nombre completo *</span>
+                    <input id="man-nombre" class="input" placeholder="Ej. María López Hernández"></div>
+                <div class="row">
+                    <div class="stack"><span class="label">Código</span><input id="man-codigo" class="input"></div>
+                    <div class="stack"><span class="label">Folio</span><input id="man-folio" class="input" placeholder="automático"></div>
+                </div>
+                <div class="row">
+                    <div class="stack"><span class="label">Evento / taller</span><input id="man-evento" class="input" placeholder="usa el texto fijo"></div>
+                    <div class="stack"><span class="label">Fecha</span><input id="man-fecha" class="input" placeholder="usa la fecha fija"></div>
+                </div>
+                <div class="stack"><span class="label">Correo del destinatario (opcional)</span>
+                    <input id="man-correo" type="email" class="input" placeholder="para enviársela o guardarla en la lista"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="man-agregar" class="btn" title="La guarda en la lista para generarla junto con las demás">＋ Agregar a la lista</button>
+                <button id="man-enviar" class="btn" title="Envía esta constancia al correo que escribiste">✉️ Enviar por correo</button>
+                <button id="man-ver" class="btn">Ver en la hoja</button>
+                <button id="man-pdf" class="btn primary">Generar PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================
+         MODAL: GENERAR (opciones de salida)
+         =================================================== -->
+    <div class="modal-backdrop" id="gen-modal">
+        <div class="modal small" style="width:min(580px,94vw)">
+            <div class="modal-header">
+                <h3>📦 Generar constancias</h3>
+                <button class="close-x" data-close="gen-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="gen-resumen" class="info-box"></div>
+                <div class="stack">
+                    <span class="label">Formato</span>
+                    <div class="segmented opt-seg" id="gen-modo">
+                        <button data-v="individual">📄 Un PDF por constancia</button>
+                        <button data-v="unico">📚 Un solo PDF con todas</button>
+                    </div>
+                </div>
+                <div class="stack">
+                    <span class="label">Guardar en</span>
+                    <div class="segmented opt-seg" id="gen-destino">
+                        <button data-v="carpeta">📁 Una carpeta</button>
+                        <button data-v="zip">🗜️ Archivo comprimido (ZIP)</button>
+                    </div>
+                    <div class="row" id="gen-carpeta-row">
+                        <input id="gen-carpeta" class="input" readonly placeholder="Elige una carpeta…" style="flex:3">
+                        <button id="gen-elegir" class="btn small" style="flex:0">Elegir…</button>
+                    </div>
+                    <span class="hint" id="gen-destino-hint"></span>
+                </div>
+                <div class="stack">
+                    <span class="label">Organizar por</span>
+                    <select id="gen-agrupar" class="input"></select>
+                    <span class="hint" id="gen-agrupar-hint"></span>
+                </div>
+                <div class="stack" id="gen-nombre-wrap">
+                    <span class="label">Nombre de cada archivo</span>
+                    <select id="filename-mode" class="input">
+                        <option value="nombre">Nombre del alumno</option>
+                        <option value="codigo_nombre">Código + Nombre</option>
+                        <option value="codigo">Solo código</option>
+                        <option value="folio_nombre">Folio + Nombre</option>
+                        <option value="evento_nombre">Evento + Nombre</option>
+                    </select>
+                </div>
+                <div class="stack">
+                    <span class="label">Imagen de fondo dentro del PDF</span>
+                    <div class="segmented opt-seg" id="gen-fondo">
+                        <button data-v="jpeg">JPEG (más rápido)</button>
+                        <button data-v="png">PNG (imagen exacta)</button>
+                    </div>
+                    <span class="hint" id="gen-fondo-hint"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-close="gen-modal">Cancelar</button>
+                <button id="gen-go" class="btn primary">Generar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================
+         MODAL: IMPRIMIR
+         =================================================== -->
+    <div class="modal-backdrop" id="print-modal">
+        <div class="modal small">
+            <div class="modal-header">
+                <h3>🖨️ Imprimir</h3>
+                <button class="close-x" data-close="print-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <label class="toolbar-check"><input type="radio" name="print-que" value="actual" checked>
+                    La constancia que estoy viendo (<b id="print-actual-label"></b>)</label>
+                <label class="toolbar-check"><input type="radio" name="print-que" value="todas">
+                    Todas las de la lista (<b id="print-todas-label"></b>)</label>
+                <label class="toolbar-check"><input type="radio" name="print-que" value="rango">
+                    De la
+                    <input type="number" id="print-desde" class="input" min="1" style="width:70px;height:26px"> a la
+                    <input type="number" id="print-hasta" class="input" min="1" style="width:70px;height:26px"></label>
+                <p class="hint">Se abrirá la vista de impresión, ahí eliges la impresora, las copias y si es a color.
+                    Si filtras por evento, solo se imprimen las de ese evento.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-close="print-modal">Cancelar</button>
+                <button id="print-go" class="btn primary">Imprimir</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <!-- Librerías desde node_modules -->
+    <script src="node_modules/jspdf/dist/jspdf.umd.min.js"></script>
+    <script src="node_modules/jszip/dist/jszip.min.js"></script>
+    <script src="node_modules/papaparse/papaparse.min.js"></script>
+    <script src="./librerias/xlsx.full.min.js"></script>
+    <script src="./librerias/qrcode.js"></script>
+
+    <!-- Fuentes (deben cargarse antes del editor) -->
+    <script src="./configuracion_fuentes.js"></script>
+    <script src="./fuentes/catalogo.js"></script>
+
+    <!-- Lógica del editor -->
+    <script src="./renderer.js"></script>
+
+    <!-- Recorrido propio del Modo Express -->
+    <script>
+        window.TUTORIAL_CLAVE = 'gc_tutorial_express_visto';
+        window.TUTORIAL_PASOS = [
+            {
+                titulo: 'Modo Express ⚡',
+                texto: 'Para cuando tienes prisa: constancias en <b>4 pasos</b>, sin opciones de más.<br><br>' +
+                    'Sigue los números de la izquierda de arriba hacia abajo.'
+            },
+            { objetivo: () => document.getElementById('ex-paso-1'), titulo: '1 · Diseño',
+              texto: 'Elige la <b>imagen</b> de tu constancia (JPG o PNG). Si ya guardaste un diseño antes, ábrelo aquí y te ahorras los pasos 1 y 3.' },
+            { objetivo: () => document.getElementById('ex-paso-2'), titulo: '2 · Personas',
+              texto: 'Carga tu lista de <b>Excel o CSV</b> (basta una columna <b>Nombre</b>), <b>pega la tabla</b> copiada de Excel, o escribe una sola persona a mano. Pasa el mouse sobre el <b>?</b> para ver cómo debe ser la tabla.' },
+            { objetivo: () => document.getElementById('ex-paso-3'), titulo: '3 · Textos',
+              texto: 'Marca con ✔ los textos que llevará (nombre, taller, fecha…). Luego <b>arrástralos con el mouse</b> en la hoja y cambia letra, tamaño y color aquí.' },
+            { objetivo: () => document.getElementById('certificate-canvas'), titulo: 'La hoja',
+              texto: 'Aquí ves cómo queda. Con <b>◀ ▶</b> de abajo revisas a cada persona.' },
+            { objetivo: () => document.getElementById('ex-paso-4'), titulo: '4 · ¡Listo!',
+              texto: 'Presiona <b>Generar</b> y elige una carpeta. También puedes <b>imprimir</b> o enviar por <b>correo</b> (usa la cuenta que configures; es la misma del modo avanzado).' },
+            { objetivo: () => document.getElementById('advanced-btn'), titulo: '¿Necesitas más?',
+              texto: 'El <b>Modo avanzado</b> siempre está aquí, con todo: más fuentes, estilos, correo masivo, calibración… ' +
+                  'Tu diseño y tu lista se conservan al cambiar.<br><br>Puedes repetir este tutorial con <b>Tutorial</b> o <b>F1</b>.' }
+        ];
+
+        (() => {
+            const $ = (id) => document.getElementById(id);
+            // Ir al modo avanzado (a la cinta que se usó la última vez)
+            $('advanced-btn').addEventListener('click', async () => {
+                if (!await Editor.antesDeCambiarDeModo()) return;
+                try { localStorage.setItem('gc_interfaz', 'completo'); } catch (e) { }
+                location.href = 'index.html';
+            });
+            try { localStorage.setItem('gc_interfaz', 'express'); } catch (e) { }
+
+            // Antes de abrir "Generar": opciones automáticas (sin preguntar)
+            $('generate-pdf-btn').addEventListener('click', () => {
+                if (typeof Editor === 'undefined') return;
+                const op = Editor.opciones;
+                op.destino = Escritorio.tieneArchivos ? 'carpeta' : 'zip';
+                // Si hay varios talleres, una carpeta (o un PDF) por taller
+                op.agruparPor = Alumnos.eventos().filter(e => e.nombre).length > 1 ? 'evento' : '';
+                // Fondo: el formato que pese menos
+                const f = Editor.fondo;
+                if (f && f.jpeg && /^data:image\/png/i.test(f.dataUrl)) op.formatoFondo = f.jpeg.length <= f.dataUrl.length ? 'jpeg' : 'png';
+                $('filename-mode').value = 'nombre';
+            }, true);
+
+            // Palomita verde en los pasos terminados
+            const marcar = () => {
+                if (typeof Editor === 'undefined') return;
+                $('ex-paso-1').classList.toggle('hecho', !!Editor.fondo);
+                $('ex-paso-2').classList.toggle('hecho', Alumnos.lista.length > 0 || !!Editor.manual);
+                $('ex-paso-3').classList.toggle('hecho', !!Editor.fondo && Editor.campos.some(c => c.activo));
+            };
+            setInterval(marcar, 700);
+
+            // Pocas fuentes, las más útiles (más las que ya use tu diseño)
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    const permitidas = new Set(['CalibriLight', 'Arial', 'times', 'Montserrat', 'PlayfairDisplay', 'Lora', 'Cinzel', 'GreatVibes']);
+                    if (typeof Editor !== 'undefined') Editor.campos.forEach(c => permitidas.add(c.fuente));
+                    const sel = $('prop-font');
+                    [...sel.querySelectorAll('option')].forEach(o => { if (!permitidas.has(o.value)) o.remove(); });
+                    sel.querySelectorAll('optgroup').forEach(g => { if (!g.children.length) g.remove(); });
+                    if (typeof Editor !== 'undefined' && Editor.campoSel) sel.value = Editor.campoSel.fuente;
+                }, 300);
+            });
+        })();
+    </script>
+
+    <!-- Tutorial de primer uso (se repite con el botón "Tutorial" o F1) -->
+    <script src="./tutorial.js"></script>
+
+    <!-- Comportamiento de la cinta (pestañas, atajos, extras) -->
+    <script>
+        (() => {
+            const $ = (id) => document.getElementById(id);
+            const tabs = document.querySelectorAll('.tab');
+            const abrirPestana = (nombre) => {
+                if (!document.querySelector(`.ribbon-panel[data-panel="${nombre}"]`)) return;
+                tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === nombre));
+                document.querySelectorAll('.ribbon-panel').forEach(p =>
+                    p.classList.toggle('active', p.dataset.panel === nombre));
+                try { localStorage.setItem('gc_pestana', nombre); } catch (e) { }
+            };
+            window.gcAbrirPestana = abrirPestana; // lo usa el tutorial
+            tabs.forEach(t => t.addEventListener('click', () => abrirPestana(t.dataset.tab)));
+            document.querySelectorAll('[data-goto]').forEach(b =>
+                b.addEventListener('click', () => abrirPestana(b.dataset.goto)));
+            try { const p = localStorage.getItem('gc_pestana'); if (p) abrirPestana(p); } catch (e) { }
+
+            // Botones que "presionan" a otro control
+            document.querySelectorAll('[data-click]').forEach(b =>
+                b.addEventListener('click', () => $(b.dataset.click).click()));
+
+            // Al hacer clic en un texto de la hoja, se abre la pestaña Texto (como en Word)
+            $('fields-layer').addEventListener('mousedown', e => {
+                if (e.target.closest('.field-el')) abrirPestana('texto');
+            });
+            $('fields-list').addEventListener('click', e => {
+                if (e.target.closest('.field-row') && e.target.tagName !== 'INPUT') abrirPestana('texto');
+            });
+
+            // Agrandar / achicar letra
+            const pasoTamano = (d) => {
+                const inp = $('prop-size');
+                const v = Math.min(150, Math.max(2, (parseFloat(inp.value) || 8) + d));
+                inp.value = v;
+                inp.dispatchEvent(new Event('input'));
+            };
+            $('size-up').addEventListener('click', () => pasoTamano(0.5));
+            $('size-down').addEventListener('click', () => pasoTamano(-0.5));
+
+            // Muestra del color y del tamaño
+            const actualizarMuestras = () => {
+                $('prop-color-hex-swatch').style.background = $('prop-color').value;
+                $('prop-size-val').textContent = $('prop-size').value;
+            };
+            ['input', 'change'].forEach(ev => {
+                $('prop-color').addEventListener(ev, actualizarMuestras);
+                $('prop-size').addEventListener(ev, actualizarMuestras);
+                $('prop-size-range').addEventListener(ev, actualizarMuestras);
+            });
+            new MutationObserver(actualizarMuestras).observe($('prop-title'), { childList: true, characterData: true, subtree: true });
+            document.addEventListener('click', () => setTimeout(actualizarMuestras, 0));
+
+            // Recordar cuál cinta avanzada se usa (para regresar desde el Modo Express)
+            try { localStorage.setItem('gc_interfaz_avanzada', 'pestanas'); } catch (e) { }
+            const ex = $('express-btn');
+            if (ex) ex.addEventListener('click', () => {
+                try { localStorage.setItem('gc_interfaz', 'express'); } catch (e) { }
+                location.href = 'index_express.html';
+            });
+
+            // Cambiar entre cinta con pestañas y cinta única
+            const sw = $('layout-switch');
+            if (sw) sw.addEventListener('click', () => {
+                try { localStorage.setItem('gc_interfaz', sw.dataset.valor); } catch (e) { }
+                location.href = sw.dataset.destino;
+            });
+
+            // Ventanita de calibración (solo en la cinta única)
+            const cb = $('calib-btn'), cp = $('calib-pop');
+            if (cb && cp) {
+                cb.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const r = cb.getBoundingClientRect();
+                    cp.style.left = Math.min(r.left, window.innerWidth - 250) + 'px';
+                    cp.style.top = (r.bottom + 6) + 'px';
+                    cp.style.display = cp.style.display === 'none' ? 'block' : 'none';
+                });
+                document.addEventListener('mousedown', (e) => {
+                    if (!cp.contains(e.target) && e.target !== cb && !cb.contains(e.target)) cp.style.display = 'none';
+                });
+            }
+
+            // Atajos de teclado estilo Word (en español: N = negrita, K = cursiva, S = subrayado)
+            document.addEventListener('keydown', e => {
+                if (!e.ctrlKey || e.altKey) return;
+                const enCampo = ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName);
+                const k = e.key.toLowerCase();
+                const hayVentana = !!document.querySelector('.modal-backdrop.open');
+                if (k === 'g' && !hayVentana) { e.preventDefault(); $('save-template-btn').click(); return; }
+                if (k === 'o' && !hayVentana) { e.preventDefault(); Editor.abrirPlantillaUI(); return; }
+                if (enCampo || hayVentana) return;
+                const estilo = { n: 'negrita', b: 'negrita', k: 'cursiva', i: 'cursiva', s: 'subrayado', u: 'subrayado' }[k];
+                if (estilo) {
+                    e.preventDefault();
+                    document.querySelector(`#prop-styles [data-style="${estilo}"]`).click();
+                }
+            });
+        })();
+    </script>
+</body>
+
+</html>

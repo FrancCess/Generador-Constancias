@@ -1,0 +1,85 @@
+{
+  "name": "extraccion_constancias",
+  "productName": "Generador de Constancias",
+  "version": "3.1.0",
+  "description": "Sistema de generación de constancias de asistencia en PDF desde archivos CSV, con envío por correo",
+
+  "main": "main.js",
+
+  "actualizaciones": {
+    "github": ""
+  },
+
+  "scripts": {
+    "start": "electron .",
+
+    "build": "electron-builder",
+
+    "postinstall": "electron-builder install-app-deps",
+
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["electron", "pdf", "csv", "constancias"],
+  "author": "",
+  "license": "ISC",
+
+  "devDependencies": {
+    "electron": "^40.6.1",
+
+    "electron-builder": "^26.8.1"
+  },
+
+  "dependencies": {
+    "jspdf": "^4.2.0",
+    "jszip": "^3.10.1",
+    "nodemailer": "^10.0.14",
+    "papaparse": "^5.5.3"
+  },
+
+  "build": {
+    "appId": "com.ele.constancias",
+
+    "productName": "Generador de Constancias",
+
+    "directories": {
+      "output": "dist"
+    },
+
+    "files": [
+      "main.js",
+      "correo.js",
+      "index.html",
+      "index_express.html",
+      "pagina_verificacion/**/*",
+      "renderer.js",
+      "tutorial.js",
+      "configuracion_fuentes.js",
+      "fuentes/**/*",
+      "librerias/**/*",
+      "assets/**/*",
+      "node_modules/**/*"
+    ],
+
+    "extraResources": [
+      "node_modules/jspdf/dist/jspdf.umd.min.js",
+      "node_modules/jszip/dist/jszip.min.js",
+      "node_modules/papaparse/papaparse.min.js"
+    ],
+
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Generador de Constancias",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "include": "build/instalador.nsh"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+PÁGINA DE VERIFICACIÓN DE CONSTANCIAS (opcional)
+================================================
+
+Sirve para que, al escanear el código QR de una constancia, se abra una página
+que diga si es auténtica.
+
+1. En el programa: Historial → «Exportar para página web». Se descarga registro.json.
+2. Crea un repositorio en GitHub (por ejemplo «constancias») y sube:
+      index.html   (este archivo)
+      registro.json
+3. En el repositorio: Settings → Pages → Branch: main → Save.
+   GitHub te da una dirección como:  https://tu-usuario.github.io/constancias/
+4. En el programa, en el campo «Código QR», elige «Una página web de verificación»
+   y escribe esa dirección.
+5. Cada vez que generes constancias nuevas, vuelve a exportar registro.json y súbelo
+   (reemplaza el anterior) para que también se puedan verificar.
+
+Privacidad: la página es pública. Por eso, al exportar se recomienda el nombre
+abreviado (Paola A. G. S.). El registro NO incluye correos ni códigos de estudiante.

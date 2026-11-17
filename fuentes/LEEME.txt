@@ -1,0 +1,12 @@
+Fuentes adicionales del Generador de Constancias
+================================================
+Todas las fuentes de esta carpeta son fuentes libres de Google Fonts,
+distribuidas bajo la licencia SIL Open Font License 1.1 (ver LICENCIA_OFL.txt).
+Se pueden usar, incrustar en PDFs y redistribuir libremente.
+
+Montserrat, Poppins, Roboto, Open Sans, Lato, Oswald, Playfair Display, Lora,
+Merriweather, EB Garamond, Cormorant Garamond, Cinzel, Great Vibes,
+Pinyon Script, Allura, Alex Brush, Parisienne, Dancing Script.
+
+catalogo.js indica qué estilos (normal, negrita, cursiva, negrita cursiva)
+tiene cada familia. No borres ni renombres los archivos .ttf.
